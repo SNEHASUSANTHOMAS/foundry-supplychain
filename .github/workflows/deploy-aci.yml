@@ -1,0 +1,59 @@
+name: Build and Deploy to Azure Container Instances
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  ACR_NAME: acrsupplychainsneha
+  IMAGE_NAME: supply-chain-agent
+  RESOURCE_GROUP: RG_Foundry2
+  ACI_NAME: aci-supply-chain-agent
+  LOCATION: uksouth
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Log in to Azure Container Registry
+        run: az acr login --name ${{ env.ACR_NAME }}
+
+      - name: Build and push Docker image
+        run: |
+          IMAGE_TAG=${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          docker build -t "$IMAGE_TAG" .
+          docker push "$IMAGE_TAG"
+
+      - name: Deploy to Azure Container Instances
+        run: |
+          ACR_PASS=$(az acr credential show --name ${{ env.ACR_NAME }} --query "passwords[0].value" -o tsv)
+          az container create \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --name ${{ env.ACI_NAME }} \
+            --location ${{ env.LOCATION }} \
+            --image ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            --registry-login-server ${{ env.ACR_NAME }}.azurecr.io \
+            --registry-username ${{ env.ACR_NAME }} \
+            --registry-password "$ACR_PASS" \
+            --dns-name-label supply-chain-sneha \
+            --ports 8000 \
+            --os-type Linux \
+            --cpu 1 \
+            --memory 1.5 \
+            --environment-variables \
+              PROJECT_ENDPOINT="${{ secrets.PROJECT_ENDPOINT }}" \
+              MODEL_DEPLOYMENT_NAME="${{ secrets.MODEL_DEPLOYMENT_NAME }}" \
+              AZURE_CLIENT_ID="${{ secrets.AZURE_CLIENT_ID }}" \
+              AZURE_TENANT_ID="${{ secrets.AZURE_TENANT_ID }}" \
+            --secure-environment-variables \
+              AZURE_CLIENT_SECRET="${{ secrets.AZURE_CLIENT_SECRET }}"
+

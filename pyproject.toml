@@ -1,0 +1,18 @@
+[project]
+name = "foundry-supplychain"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "azure-ai-agents>=1.1.0",
+    "azure-ai-projects>=2.11.0",
+    "azure-identity>=1.27.0",
+    "dotenv>=0.9.9",
+    "fastapi>=0.165.0",
+    "langchain>=1.5.2",
+    "langchain-azure-ai>=1.4.0",
+    "langchain-openai>=1.8.5",
+    "openai>=3.57.0",
+    "uvicorn>=0.54.0",
+]
