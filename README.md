@@ -151,3 +151,19 @@ Ensure the following GitHub repository secrets are configured:
 - `AZURE_TENANT_ID`
 - `AZURE_CLIENT_SECRET`
 
+### Live Endpoints (ACI)
+
+- **Web UI:** `http://supply-chain-sneha.uksouth.azurecontainer.io:8000`
+- **API Docs (Swagger):** `http://supply-chain-sneha.uksouth.azurecontainer.io:8000/docs`
+- **Health Check:** `http://supply-chain-sneha.uksouth.azurecontainer.io:8000/health`
+
+```bash
+# Verify live container health
+curl http://supply-chain-sneha.uksouth.azurecontainer.io:8000/health
+
+# Check container status or logs via Azure CLI
+az container show --resource-group RG_Foundry2 --name aci-supply-chain-agent \
+  --query "{state:instanceView.state, fqdn:ipAddress.fqdn}" -o json
+az container logs --resource-group RG_Foundry2 --name aci-supply-chain-agent
+```
+
